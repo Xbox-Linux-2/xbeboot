@@ -21,6 +21,6 @@ You will need the following tools:
     sudo apt-get install build-essential make git
 
 ### Download & Build xbeboot
-    git clone https://github.com/aurxenon/xbeboot.git
+    git clone https://github.com/Xbox-Linux-2/xbeboot.git
     cd xbeboot
     make all

@@ -3,7 +3,6 @@
 
     by Michael Steil & anonymous
     VESA Framebuffer code by Milosch Meriac
-	Updated to support more ram and larger kernels by Edward Humes
 */
 
 #include "printf.c"
@@ -161,7 +160,7 @@ void boot() {
 
 	dprintf("Xbox Linux XBEBOOT %s\n",VERSION);
 
-	dprintf("%s -  https://github.com/XboxDev/xbeboot\n",__DATE__);
+	dprintf("%s -  https://github.com/Xbox-Linux-2/xbeboot\n",__DATE__);
 	dprintf("(C)2002,2018 Xbox Linux Team, Xbox-Linux-2 Team - Licensed under the GPLv2\n");
 	dprintf("\n");
 
