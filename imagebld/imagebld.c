@@ -49,35 +49,35 @@ int xbebuild (	unsigned char * xbeimage,
 {
 	FILE *f;
 	
-        int a;
+    int a;
 	unsigned char sha_Message_Digest[SHA1HashSize];
 
-        unsigned char *xbe;
-        unsigned int xbesize = 0;
+    unsigned char *xbe;
+    unsigned int xbesize = 0;
 
-    	unsigned char *vmlinuz;
-    	unsigned int vmlinux_size = 0;
-        unsigned int vmlinux_start=0;
+    unsigned char *vmlinuz;
+    unsigned int vmlinux_size = 0;
+    unsigned int vmlinux_start=0;
         
-        unsigned char *initrd;         
-        unsigned int initrd_size = 0;
+    unsigned char *initrd;         
+    unsigned int initrd_size = 0;
 	unsigned int initrd_start = 0;
 
-        unsigned char *config;         
-        unsigned int config_size = 0;
+    unsigned char *config;         
+    unsigned int config_size = 0;
 	unsigned int config_start = 0;
 
 	unsigned int FileSize = 0;
 
-        unsigned int xbeloader_size=0;
+    unsigned int xbeloader_size=0;
 	
 	unsigned int temp;
 		 
 	XBE_HEADER *header;
  	XBE_SECTION *sechdr;
 
-       	printf("ImageBLD Hasher by XBL Project (c) hamtitampti\n");
-       	printf("XBEBOOT Modus\n\n");
+    printf("ImageBLD Hasher by XBL Project (c) hamtitampti\n");
+    printf("XBEBOOT Modus\n\n");
 
 #ifdef LOADXBE	
 	f = fopen(vmlinuzname, "rb");
@@ -90,9 +90,9 @@ int xbebuild (	unsigned char * xbeimage,
     		memset(vmlinuz,0xff,sizeof(vmlinuz));
     		fread(vmlinuz, 1, vmlinux_size, f);
     		fclose(f);
-    		printf("VMLinuz Existing, Linking it in\n");
+    		printf("VMLinuz found, linking it in\n");
     	} else  {
-    		printf("VMLinuz not Existing     ----> ERROR \n");
+    		printf("VMLinuz not found ----> ERROR \n");
     		return 1;
     		}
 #endif
@@ -231,9 +231,8 @@ int xbebuild (	unsigned char * xbeimage,
          	printf("Size of entire image     : 0x%08X\n", (unsigned int)header->ImageSize);
 		#endif
 
-		// This selects the First Section, we only have one
+		// This selects the first section, we only have one
 		sechdr = (XBE_SECTION *)(((char *)xbe) + (int)header->Sections - (int)header->BaseAddress);
-		
 
 		sechdr->FileSize = xbeloader_size;
 		sechdr->VirtualSize = xbeloader_size;
@@ -323,7 +322,7 @@ int xbeextract (	unsigned char * xbeimage )
 
 		memcpy(&initrd_start, &xbe[ValueDumps + 0x8C],4);
 		memcpy(&initrd_size,  &xbe[ValueDumps + 0x90],4);
-	        memcpy(&vmlinux_start,&xbe[ValueDumps + 0x80],4);
+	    memcpy(&vmlinux_start,&xbe[ValueDumps + 0x80],4);
 		memcpy(&vmlinux_size, &xbe[ValueDumps + 0x84],4);
 		memcpy(&config_start, &xbe[ValueDumps + 0x94],4);
 		memcpy(&config_size,  &xbe[ValueDumps + 0x98],4);         		

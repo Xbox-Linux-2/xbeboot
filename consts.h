@@ -20,7 +20,7 @@ extern "C" {
  *                                                                         *
  ***************************************************************************/
 
-#define VERSION "2.1dev"
+#define VERSION "3"
 
 #define I2C_IO_BASE 0xc000
 

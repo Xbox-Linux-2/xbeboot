@@ -1,6 +1,8 @@
 #ifndef VIDEOINITIALIZATION_H
 #define VIDEOINITIALIZATION_H
 
+#include "I2C.h"
+
 // these are the various video standards supported
 
 typedef enum enumVideoStandards {

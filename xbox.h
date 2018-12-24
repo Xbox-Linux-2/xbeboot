@@ -19,17 +19,17 @@
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
 
-/* a retail Xbox has 64 MB of RAM */
-#define RAMSIZE (xbox_ram * 1024*1024)
+/* a retail Xbox has 64 MB of RAM, modded Xboxen and dev/debug kits have 128 */
 #define FB_RAM (4 * 1024 * 1024)
+#define RAMSIZE (xbox_ram * 1024*1024)
+#define FRAMEBUFFER_START RAMSIZE - FB_RAM
 
-#define FRAMEBUFFER_START          0x03c00000
 #define SCREEN_SIZE (SCREEN_HEIGHT * SCREEN_WIDTH * 4)
 #define FRAMEBUFFER_SIZE FB_RAM
 #define NEW_FRAMEBUFFER (RAMSIZE - (FRAMEBUFFER_SIZE))
 #define RAMSIZE_USE (RAMSIZE - FB_RAM)
 
-#define MAX_KERNEL_SIZE (4*1024*1024)
+#define MAX_KERNEL_SIZE (12*1024*1024)
 #define MAX_INITRD_SIZE (16*1024*1024)
 
 /* position of kernel setup data */

@@ -22,9 +22,9 @@
 #include "BootVideo.h"
 #include "VideoInitialization.h"
 #include "BootVgaInitialization.h"
+#include "I2C.h"
 
 unsigned int VideoEncoder;
-unsigned int xbox_ram = 64;
 BYTE VIDEO_AV_MODE;
 
 DWORD nvRAMDACRegValues_focus_composite_pal[] = {
@@ -134,43 +134,10 @@ DWORD nvMainRegs[] =
 		0x680684, 0x680688, 0x68068C, 0x680690,
 };
 
-void wait_us(DWORD ticks) {
-        
-	/*
-	  	32 Bit range = 1200 sec ! => 20 min
-		1. sec = 0x369E99
-		1 ms =  3579,545
-					
-	*/
-	
-	DWORD COUNT_start;
-	DWORD temp;
-	DWORD COUNT_TO;
-	DWORD HH;
-	
-	// Maximum Input range
-	if (ticks>(1200*1000)) ticks = 1200*1000;
-	
-	COUNT_TO = (DWORD) ((float)(ticks*3.579545));
-	COUNT_start = IoInputDword(0x8008);	
-
-	while(1) {
-
-		// Reads out the System timer
-		HH = IoInputDword(0x8008);		
-		temp = HH-COUNT_start;
-		// We reached the counter
-		if (temp>COUNT_TO) break;
-	
-	};
-	
-
-}
-
 void DetectVideoEncoder(void)
 {
-	if (I2CTransmitByteGetReturn(0x6a,0x00) == ERR_I2C_ERROR_BUS) VideoEncoder = VIDEO_CONEXANT;
-	else VideoEncoder = VIDEO_FOCUS;
+	if (I2CTransmitByteGetReturn(0x6a,0x00) == ERR_I2C_ERROR_BUS) VideoEncoder = ENCODER_CONEXANT;
+	else VideoEncoder = ENCODER_FOCUS;
 }
 
 
@@ -215,9 +182,9 @@ void BootVgaInitializationKernelNG(CURRENT_VIDEO_MODE_DETAILS * pcurrentvideomod
 	unlockCrtNv(&riva,0);
 
 	if (xbox_ram == 128) {
-		MMIO_H_OUT32(riva.PFB    ,0,0x200,0x03070103);
+		MMIO_H_OUT32(riva.PFB,0,0x200,0x03070103);
 	} else {
-		MMIO_H_OUT32(riva.PFB    ,0,0x200,0x03070003);
+		MMIO_H_OUT32(riva.PFB,0,0x200,0x03070003);
 	}
 
 	MMIO_H_OUT32 (riva.PCRTC, 0, 0x800, pcurrentvideomodedetails->m_dwFrameBufferStart);
@@ -319,7 +286,7 @@ void BootVgaInitializationKernelNG(CURRENT_VIDEO_MODE_DETAILS * pcurrentvideomod
 	NVSetFBStart (&riva, 0, pcurrentvideomodedetails->m_dwFrameBufferStart);
 
 	// FOCUS HACK FROM HERE
-	if (VideoEncoder == VIDEO_FOCUS)
+	if (VideoEncoder == ENCODER_FOCUS)
 	{
 		int i;
 		unlockCrtNv(&riva,0);

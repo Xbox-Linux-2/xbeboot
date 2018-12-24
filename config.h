@@ -1,6 +1,5 @@
 ////////////////////// compile-time options ////////////////////////////////
 
-
 #ifdef HDLOAD
 	#define LOADHDD
 	//#define LOADHDD_CFGFALLBACK

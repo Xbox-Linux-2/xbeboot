@@ -34,7 +34,11 @@ static inline double max (double a, double b)
 
 //extern volatile CURRENT_VIDEO_MODE_DETAILS currentvideomodedetails;
 
-extern int xbox_ram;
+#ifndef RAM_UPGRADED_XBOX
+static int xbox_ram = 64;
+#else
+static int xbox_ram = 128;
+#endif
 
 /////////////////////////////////
 // LED-flashing codes
@@ -108,8 +112,9 @@ int I2CTransmitWord(BYTE bPicAddressI2cFormat, WORD wDataToWrite);
 int I2CTransmitByteGetReturn(BYTE bPicAddressI2cFormat, BYTE bDataToWrite);
 bool I2CGetTemperature(int *, int *);
 
-void * memcpy(void *dest, const void *src,  size_t size);
-void * memset(void *dest, int data,  size_t size);
+void * xbememcpy(void *dest, const void *src,  SIZE_T size);
+void * xbestrcpy(void *dest, char *data);
+void * xbememset(void *dest, int data,  SIZE_T size);
 int _memcmp(const BYTE *pb, const BYTE *pb1, int n);
 int _strncmp(const char *sz1, const char *sz2, int nMax);
 char * strcpy(char *sz, const char *szc);

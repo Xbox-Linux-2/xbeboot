@@ -1,10 +1,10 @@
 ### compilers and options
 CC	= gcc
-CFLAGS	= -O2 -mcpu=pentium -Werror -DXBE $(EXTRA_CFLAGS)
+#for 128mb ram support add EXTRA_CFLAGS=-DRAM_UPGRADED_XBOX
+CFLAGS	= -m32 -march=pentium3 -Werror -DXBE $(EXTRA_CFLAGS)
 LD	= ld
 LDFLAGS	= -s -S -T ldscript.ld
 OBJCOPY	= objcopy
-
 
 RESOURCES = 
 TOPDIR  := $(shell /bin/pwd)
@@ -19,6 +19,8 @@ OBJECTS += $(TOPDIR)/BootParser.o
 OBJECTS += $(TOPDIR)/BootString.o 
 OBJECTS += $(TOPDIR)/BootEEPROM.o 
 OBJECTS += $(TOPDIR)/BootMemory.o 
+OBJECTS += $(TOPDIR)/VideoInitialization.o 
+OBJECTS += $(TOPDIR)/BootVgaInitialization.o
 
 # target:
 all	: clean image default.xbe
@@ -51,6 +53,6 @@ clean	:
 
 %.xbe : %.elf
 	${OBJCOPY} --output-target=binary --strip-all $< $@
-	$(TOPDIR)/imagebld/image -build $(TOPDIR)/default.xbe  $(TOPDIR)/vmlinuz $(TOPDIR)/initrd  $(TOPDIR)/linuxboot.cfg
+	$(TOPDIR)/imagebld/image -build $(TOPDIR)/default.xbe  $(TOPDIR)/vmlinuz $(TOPDIR)/initramfs.cpio.gz  $(TOPDIR)/linuxboot.cfg
 	cp default.xbe xbeboot.xbe
 	@ls -l $@

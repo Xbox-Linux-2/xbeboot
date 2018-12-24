@@ -115,14 +115,15 @@ void setup(void* KernelPos, void* PhysInitrdPos, void* InitrdSize, char* kernel_
 
     kernel_setup->boot_flag = 0xAA55;
     kernel_setup->version = 0x0203;
+	xbestrcpy((void *)kernel_setup->signature, "HdrS");
 
-    memcpy(kernel_setup->signature,"HdrS",4);
+    //memcpy(kernel_setup->signature,"HdrS",4);
 
     /* set command line */
     cmd_line_ptr = (kernel_setup->setup_sects) * 512; /* = 512 bytes from top of SETUP */
     kernel_setup->cmd_offset = (unsigned short) cmd_line_ptr;
     kernel_setup->cmd_magic = 0xA33F;
     kernel_setup->cmd_line_ptr = 0;
-    memcpy((char*)(KernelPos+cmd_line_ptr), kernel_cmdline, 512);
+    xbememcpy((char*)(KernelPos+cmd_line_ptr), kernel_cmdline, 512);
     *(char*)(KernelPos+cmd_line_ptr+511) = 0;
 }

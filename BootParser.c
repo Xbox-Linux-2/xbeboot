@@ -36,14 +36,14 @@ int ParseConfig(char *szPath,char *szBuffer, CONFIGENTRY *entry) {
         szNorm = (char *)MmAllocateContiguousMemoryEx(MAX_LINE,MIN_KERNEL,
 	                        MAX_KERNEL, 0, PAGE_READWRITE);
 
-	memset(entry,0,sizeof(CONFIGENTRY));
+	xbememset(entry,0,sizeof(CONFIGENTRY));
 	
 	ptr = szBuffer;
 	ptr = HelpGetToken(szBuffer,10);
 	entry->nValid = 1;
 	HelpCopyUntil(entry->szPath,szPath,MAX_LINE);
 	while(1) {
-		memcpy(szLine,ptr,HelpStrlen(ptr));
+		xbememcpy(szLine,ptr,HelpStrlen(ptr));
 		if(HelpStrlen(ptr) < MAX_LINE) {
 			if(HelpStrncmp(ptr,"kernel",HelpStrlen("kernel")) == 0)  {
 				HelpGetParm(szTmp, ptr);

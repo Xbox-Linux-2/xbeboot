@@ -3,7 +3,7 @@
 
     by Michael Steil & anonymous
     VESA Framebuffer code by Milosch Meriac
-
+	Updated to support more ram and larger kernels by Edward Humes
 */
 
 #include "printf.c"
@@ -11,6 +11,7 @@
 #include "xboxkrnl.h"
 #include "xbox.h"
 #include "boot.h"
+#include "BootVideo.h"
 #include "BootString.h"
 #include "BootParser.h"
 #include "BootEEPROM.h"
@@ -20,10 +21,10 @@ int NewFramebuffer;
 long KernelSize;
 PHYSICAL_ADDRESS PhysKernelPos, PhysEscapeCodePos;
 PVOID EscapeCodePos;
-int xbox_ram = 64;
 EEPROMDATA eeprom;
 
 static int ReadFile(HANDLE Handle, PVOID Buffer, ULONG Size);
+
 int WriteFile(HANDLE Handle, PVOID Buffer, ULONG Size);
 int SaveFile(char *szFileName,PBYTE Buffer,ULONG Size);
 void DismountFileSystems(void);
@@ -46,9 +47,9 @@ long LoadFile(PVOID Filename, long *lFileSize) {
 	PBYTE Buffer = 0;
 	ULONGLONG FileSize;
 
-        if (!(hFile = OpenFile(NULL, Filename, -1, FILE_NON_DIRECTORY_FILE))) {
-		dprintf("Error open file %s\n",Filename);
-                die();
+    if (!(hFile = OpenFile(NULL, Filename, -1, FILE_NON_DIRECTORY_FILE))) {
+		dprintf("Error opening file %s\n",Filename);
+    	die();
 	}
 
 	if(!GetFileSize(hFile,&FileSize)) {
@@ -56,18 +57,18 @@ long LoadFile(PVOID Filename, long *lFileSize) {
 		die();
 	}
 
-	Buffer = MmAllocateContiguousMemoryEx(FileSize + 0x1000,
-			MIN_KERNEL, MAX_KERNEL, 0, PAGE_READWRITE);
+	Buffer = MmAllocateContiguousMemoryEx(FileSize + 0x1000, MIN_KERNEL, MAX_KERNEL, 0, PAGE_READWRITE);
 	if (!Buffer) {
-		dprintf("Error alloc memory for File %s\n",Filename);
+		dprintf("Error allocating memory for file %s\n",Filename);
 		die();
 	}
 
-	memset(Buffer,0xff,FileSize + 0x1000);
+	xbememset(Buffer,0xff,FileSize + 0x1000);
 	if (!ReadFile(hFile, Buffer, FileSize)) {
 		dprintf("Error loading file %s\n",Filename);
 		die();
 	}
+	dprintf("%s is %llu bytes and is located at %p\n", Filename, (unsigned long long)FileSize, (void *)Buffer);
 
 	NtClose(hFile);
 
@@ -87,27 +88,26 @@ long LoadKernelXBE(long *FileSize) {
 	ULONGLONG TempKernelSizev;
 	TempKernelSize = *FileSize;
 
-	// This is the Where the Real kernel Starts in the XBE
-	memcpy(&TempKernelStart,(void*)0x011080,4);
-	// This is the Real kernel Size
-	memcpy(&TempKernelSizev,(void*)0x011080+0x04,4);
-	// this is the kernel Size we pass to the Kernel loader
-	memcpy(&TempKernelSize,(void*)0x011080+0x08,4);
+	// This is where the real kernel starts in the XBE
+	xbememcpy(&TempKernelStart,(void*)0x011080,4);
+	// This is the real kernel Size
+	xbememcpy(&TempKernelSizev,(void*)0x011080+0x04,4);
+	// this is the kernel size we pass to the kernel loader
+	xbememcpy(&TempKernelSize,(void*)0x011080+0x08,4);
 
-	*FileSize= TempKernelSize;
+	*FileSize = TempKernelSize;
 
-	Buffer = MmAllocateContiguousMemoryEx((ULONG) TempKernelSize,
-		MIN_KERNEL, MAX_KERNEL, 0, PAGE_READWRITE);
+	Buffer = MmAllocateContiguousMemoryEx((ULONG) TempKernelSize, MIN_KERNEL, MAX_KERNEL, 0, PAGE_READWRITE);
 	if (!Buffer) return 0;
 
-	// We fille the compleate space with 0xff
-	memcpy(Buffer,(void*)0x010000+TempKernelStart,TempKernelSizev);
-	memset(Buffer+TempKernelSizev,0xff,TempKernelSize-TempKernelSizev);
+	// We fill the complete space with 0xff
+	xbememcpy(Buffer,(void*)0x010000+TempKernelStart,TempKernelSizev);
+	xbememset(Buffer+TempKernelSizev,0xff,TempKernelSize-TempKernelSizev);
 
-	// We force the Cache to write back the changes to RAM
+	// We force the cache to write back the changes to RAM
 	asm volatile ("wbinvd\n");
 
-        return (long)Buffer;
+    return (long)Buffer;
 }
 
 long LoadIinitrdXBE(long *FileSize) {
@@ -117,8 +117,8 @@ long LoadIinitrdXBE(long *FileSize) {
 	ULONGLONG TempInitrdStart;
 	ULONGLONG TempInitrdSize;
 
-	memcpy(&TempInitrdStart,(void*)0x011080+0xC,4);	// This is the Where the Real kernel Starts in the XBE
-	memcpy(&TempInitrdSize,(void*)0x011080+0x10,4);	// This is the Real kernel Size
+	xbememcpy(&TempInitrdStart,(void*)0x011080+0xC,4);	// This is the where the real kernel starts in the XBE
+	xbememcpy(&TempInitrdSize,(void*)0x011080+0x10,4);	// This is the real kernel Size
 
 	*FileSize= TempInitrdSize;
 
@@ -127,11 +127,11 @@ long LoadIinitrdXBE(long *FileSize) {
 
 	if (!Buffer) return 0;
 
-	memcpy(Buffer,(void*)0x010000+TempInitrdStart,TempInitrdSize);
+	xbememcpy(Buffer,(void*)0x010000+TempInitrdStart,TempInitrdSize);
 	// We force the Cache to write back the changes to RAM
 	asm volatile ("wbinvd\n");
 
-        return (long)Buffer;
+    return (long)Buffer;
 }
 
 #endif
@@ -151,28 +151,28 @@ void boot() {
 	CONFIGENTRY entry;
 
 	framebuffer = (unsigned int*)(0xF0000000+*(unsigned int*)0xFD600800);
-	memset(framebuffer,0,SCREEN_WIDTH*SCREEN_HEIGHT*4);
+	xbememset(framebuffer,0,SCREEN_WIDTH*SCREEN_HEIGHT*4);
 
-	memset(&entry,0,sizeof(CONFIGENTRY));
+	xbememset(&entry,0,sizeof(CONFIGENTRY));
 	cx = 0;
 	cy = 0;
 
 	/* parse the configuration file */
 
-	dprintf("Xbox Linux XBEBOOT  %s\n",VERSION);
+	dprintf("Xbox Linux XBEBOOT %s\n",VERSION);
 
-	dprintf("%s -  http://xbox-linux.sf.net\n",__DATE__);
-	dprintf("(C)2002 Xbox Linux Team - Licensed under the GPL\n");
+	dprintf("%s -  https://github.com/XboxDev/xbeboot\n",__DATE__);
+	dprintf("(C)2002,2018 Xbox Linux Team, Xbox-Linux-2 Team - Licensed under the GPLv2\n");
 	dprintf("\n");
 
 	DismountFileSystems();
 
-	if(!RemapDrive("\\??\\D:")) {
+	if(!RemapDrive("\\??\\E:")) {
 		dprintf("Error RemapDrive\n");
 		die();
 	}
 
-	memset(&eeprom, 0, sizeof(EEPROMDATA));
+	xbememset(&eeprom, 0, sizeof(EEPROMDATA));
 	BootEepromReadEntireEEPROM(&eeprom);
 
         {
@@ -187,9 +187,9 @@ void boot() {
 #ifdef LOADHDD
 	Error = GetConfig(&entry);
 #ifdef LOADHDD_CFGFALLBACK
-        if (!NT_SUCCESS(Error)) {
-        	Error = GetConfigXBE(&entry);
-        }
+    if (!NT_SUCCESS(Error)) {
+       	Error = GetConfigXBE(&entry);
+    }
 #endif
 	if (!NT_SUCCESS(Error)) die();
 
@@ -227,23 +227,20 @@ void boot() {
 	PhysKernelPos = MmGetPhysicalAddress((PVOID)KernelPos);
 
 	// Load the Ramdisk into the correct RAM
-       	InitrdPos = LoadIinitrdXBE(&InitrdSize);
+    InitrdPos = LoadIinitrdXBE(&InitrdSize);
 	PhysInitrdPos = MmGetPhysicalAddress((PVOID)InitrdPos);
 #endif
 
 	/* allocate memory for EscapeCode */
-	EscapeCodePos = MmAllocateContiguousMemoryEx(PAGE_SIZE, RAMSIZE /4, 
-			RAMSIZE / 2, 16, PAGE_READWRITE);
+	EscapeCodePos = MmAllocateContiguousMemoryEx(PAGE_SIZE, RAMSIZE /4, RAMSIZE / 2, 16, PAGE_READWRITE);
 	PhysEscapeCodePos = MmGetPhysicalAddress(EscapeCodePos);
 
 	data_PAGE_SIZE = PAGE_SIZE;
-	Error = NtAllocateVirtualMemory((PVOID*)&PhysEscapeCodePos, 0, 
-			(PULONG) &data_PAGE_SIZE, MEM_RESERVE | MEM_COMMIT, 
-			PAGE_EXECUTE_READWRITE);
+	Error = NtAllocateVirtualMemory((PVOID*)&PhysEscapeCodePos, 0, (PULONG) &data_PAGE_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
 	/* copy EscapeCode to EscapeCodePos & PhysEscapeCodePos */
-	memcpy(EscapeCodePos, &EscapeCode, PAGE_SIZE);
-	memcpy((void*)PhysEscapeCodePos, &EscapeCode, PAGE_SIZE);
+	xbememcpy(EscapeCodePos, &EscapeCode, PAGE_SIZE);
+	xbememcpy((void*)PhysEscapeCodePos, &EscapeCode, PAGE_SIZE);
 
 	setup((void*)KernelPos, (void*)PhysInitrdPos, (void*)InitrdSize, entry.szAppend);
 
@@ -367,9 +364,9 @@ NTSTATUS GetConfig(CONFIGENTRY *entry) {
 	PBYTE Buffer;
 	HANDLE hFile;
 
-	memset(entry,0,sizeof(CONFIGENTRY));
+	xbememset(entry,0,sizeof(CONFIGENTRY));
 
-        if (!(hFile = OpenFile(NULL, "\\??\\D:\\linuxboot.cfg", -1, FILE_NON_DIRECTORY_FILE)))
+        if (!(hFile = OpenFile(NULL, "\\??\\E:\\linuxboot.cfg", -1, FILE_NON_DIRECTORY_FILE)))
                 return 1;
 
 	if(!GetFileSize(hFile,&FileSize)) {
@@ -390,7 +387,7 @@ NTSTATUS GetConfig(CONFIGENTRY *entry) {
 		return 1;
 	}
 
-	ParseConfig("\\??\\D:\\",Buffer,entry);
+	ParseConfig("\\??\\E:\\",Buffer,entry);
 
 	NtClose(hFile);
 
@@ -403,17 +400,16 @@ NTSTATUS GetConfigXBE(CONFIGENTRY *entry) {
         unsigned int TempConfigSize;
 
 	// This is the Real kernel Size
-	memcpy(&TempConfigStart,(void*)0x011080+0x14,4);
+	xbememcpy(&TempConfigStart,(void*)0x011080+0x14,4);
 	// this is the kernel Size we pass to the Kernel loader
-	memcpy(&TempConfigSize, (void*)0x011080+0x18,4);
+	xbememcpy(&TempConfigSize, (void*)0x011080+0x18,4);
 
-	Buffer = MmAllocateContiguousMemoryEx(CONFIG_BUFFERSIZE,MIN_KERNEL,
-	                        MAX_KERNEL, 0, PAGE_READWRITE);
+	Buffer = MmAllocateContiguousMemoryEx(CONFIG_BUFFERSIZE, MIN_KERNEL, MAX_KERNEL, 0, PAGE_READWRITE);
 
-       	memset(Buffer,0x00,CONFIG_BUFFERSIZE);
-       	memcpy(Buffer,(void*)0x010000+TempConfigStart,TempConfigSize);
+    xbememset(Buffer,0x00,CONFIG_BUFFERSIZE);
+    xbememcpy(Buffer,(void*)0x010000+TempConfigStart,TempConfigSize);
 
-	ParseConfig("\\??\\D:\\",Buffer,entry);
+	ParseConfig("\\??\\E:\\",Buffer,entry);
 
 	return STATUS_SUCCESS;
 }
@@ -433,7 +429,7 @@ int RemapDrive(char *szDrive)
 		return 0;
 
 	// Copy the XBE filename for now
-	memcpy(DDrivePath, XeImageFileName->Buffer, XeImageFileName->Length);
+	xbememcpy(DDrivePath, XeImageFileName->Buffer, XeImageFileName->Length);
 	DDrivePath[XeImageFileName->Length] = 0;
 
 	// Delete the trailing backslash, chopping off the XBE name, and make it

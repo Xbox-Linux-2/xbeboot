@@ -1,7 +1,7 @@
 #include "boot.h"
 #include "xboxkrnl.h"
 
-void __inline * memcpy(void *dest, const void *src, size_t size) {
+void __inline * xbememcpy(void *dest, const void *src, SIZE_T size) {
 
 	__asm__  (
 		"    push %%esi    \n"
@@ -24,7 +24,15 @@ void __inline * memcpy(void *dest, const void *src, size_t size) {
 	return dest;
 }
 
-void * memset(void *dest, int data,  size_t size)
+void * xbestrcpy(void *dest, char *data)
+{
+   char *saved = dest;
+   while ((*(char *)dest++ = *data++) != '\0');
+
+   return saved;
+}
+
+void * xbememset(void *dest, int data,  SIZE_T size)
 {
   	char *p = dest;
 	while (size -- > 0)
@@ -33,14 +41,3 @@ void * memset(void *dest, int data,  size_t size)
 	}
 	return dest;
 }
-/*
-void * memset(void *dest, int data,  size_t size)
-{
-  	char *p = dest;
-	while (size -- > 0)
-	{
-		*p ++ = data;
-	}
-	return dest;
-}
-*/

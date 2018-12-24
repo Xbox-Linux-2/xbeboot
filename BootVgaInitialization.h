@@ -132,6 +132,12 @@ typedef struct _riva_hw_inst
 	volatile BYTE *PVIDEO;
 } RIVA_HW_INST;
 
+typedef enum enumEncoderType {
+	        ENCODER_CONEXANT,
+	        ENCODER_FOCUS,
+	        ENCODER_XCALIBUR
+} xbox_encoder_type;
+
 // function prototypes, not to be called from outside BootVgaInitialization
 static void mapNvMem (RIVA_HW_INST *riva, BYTE *IOAddress);
 static void NVDisablePalette (RIVA_HW_INST *riva, int head);

@@ -59,6 +59,35 @@ static double fabs(double d) {
 }
 #endif
 
+void wait_ms(u32 ticks) {
+        
+	/*
+	  	32 Bit range = 1200 sec ! => 20 min
+		1. sec = 0x369E99
+		1 ms =  3579,545
+					
+	*/
+	
+	u32 COUNT_start;
+	u32 temp;
+	u32 COUNT_TO;
+	u32 HH;
+	
+	// Maximum Input range
+	if (ticks>(1200*1000)) ticks = 1200*1000;
+	
+	COUNT_TO = (u32) ((float)(ticks*3579.545));
+	COUNT_start = IoInputDword(0x8008);	
+
+	while(1) {
+		// Reads out the System timer
+		HH = IoInputDword(0x8008);		
+		temp = HH-COUNT_start;
+		// We reached the counter
+		if (temp>COUNT_TO) break;
+	};
+}
+
 static BYTE NvGetCrtc(BYTE * pbRegs, int nIndex) {
 	pbRegs[0x6013d4]=nIndex;
 	return pbRegs[0x6013d5];
