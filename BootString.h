@@ -8,6 +8,6 @@ char *HelpStrrchr(const char *string, int ch);
 char *HelpCopyUntil(char* d, char* s, int max);
 char *HelpScan0(char* s);
 int HelpStrncmp(const char *sz1, const char *sz2, int nMax);
-char * strcpy(char *sz, const char *szc);
+char *strrchr0(char *string, char ch);
 
 #endif // _BootString_H_

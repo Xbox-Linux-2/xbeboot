@@ -1,6 +1,8 @@
 #ifndef _BootVideo_H_
 #define _BootVideo_H_
 
+#include <stdint.h>
+
 enum {
 	VIDEO_MODE_UNKNOWN=-1,
 	VIDEO_MODE_640x480=0,
@@ -33,5 +35,6 @@ typedef struct {
 } CURRENT_VIDEO_MODE_DETAILS;
 
 void BootVgaInitializationKernelNG(CURRENT_VIDEO_MODE_DETAILS * pcurrentvideomodedetails);
+int VideoDumpAddressAndData(uint32_t dwAds, const uint8_t * baData, uint32_t dwCountBytesUsable);
 
 #endif // _BootVideo_H_

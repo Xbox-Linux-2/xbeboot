@@ -16,9 +16,9 @@
 /////////////////////////////////
 // configuration
 
-
-#include <linux/types.h>
-#include "types.h"
+#include <xboxkrnl/xboxkrnl.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 static inline double min (double a, double b)
 {
@@ -29,10 +29,6 @@ static inline double max (double a, double b)
 {
         if (a > b) return a; else return b;
 }
-
-//#include "BootVideo.h"
-
-//extern volatile CURRENT_VIDEO_MODE_DETAILS currentvideomodedetails;
 
 #ifndef RAM_UPGRADED_XBOX
 static int xbox_ram = 64;
@@ -58,14 +54,10 @@ enum {
 ///////////////////////////////
 /* BIOS-wide error codes		all have b31 set  */
 
-enum {
-	ERR_SUCCESS = 0,  // completed without error
-
-	ERR_I2C_ERROR_TIMEOUT = 0x80000001,  // I2C action failed because it did not complete in a reasonable time
-	ERR_I2C_ERROR_BUS = 0x80000002, // I2C action failed due to non retryable bus error
-
-	ERR_BOOT_PIC_ALG_BROKEN = 0x80000101 // PIC algorithm did not pass its self-test
-};
+#define ERR_SUCCESS 0
+#define ERR_I2C_ERROR_TIMEOUT 0x80000001
+#define ERR_I2C_ERROR_BUS 0x80000002
+#define ERR_BOOT_PIC_ALG_BROKEN 0x80000101
 
 /* ----------------------------  IO primitives -----------------------------------------------------------
 */
@@ -114,7 +106,6 @@ bool I2CGetTemperature(int *, int *);
 
 void * xbememcpy(void *dest, const void *src,  SIZE_T size);
 void * xbestrcpy(void *dest, char *data);
-void * xbememset(void *dest, int data,  SIZE_T size);
 int _memcmp(const BYTE *pb, const BYTE *pb1, int n);
 int _strncmp(const char *sz1, const char *sz2, int nMax);
 char * strcpy(char *sz, const char *szc);
@@ -124,8 +115,5 @@ void HelpGetParm(char *szBuffer, char *szOrig);
 char *HelpStrrchr(const char *string, int ch);
 char *HelpCopyUntil(char* d, char* s, int max);
 char *HelpScan0(char* s);
-
-
-int printk(const char *fmt, ...);
 
 #endif // _Boot_H_

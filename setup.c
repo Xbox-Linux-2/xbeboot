@@ -1,4 +1,5 @@
 #include "xbox.h"
+#include "BootMemory.h"
 #include "boot.h"
 
 /* parameters to be passed to the kernel */
@@ -116,8 +117,6 @@ void setup(void* KernelPos, void* PhysInitrdPos, void* InitrdSize, char* kernel_
     kernel_setup->boot_flag = 0xAA55;
     kernel_setup->version = 0x0203;
 	xbestrcpy((void *)kernel_setup->signature, "HdrS");
-
-    //memcpy(kernel_setup->signature,"HdrS",4);
 
     /* set command line */
     cmd_line_ptr = (kernel_setup->setup_sects) * 512; /* = 512 bytes from top of SETUP */

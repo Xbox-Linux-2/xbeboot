@@ -1,8 +1,6 @@
-CXX       = gcc
+CXX       = clang
 #OPT       = -O -g
 #FLAGS     = $(OPT) -ansi -W -Wall -L.
-FLAG	   =
-OPT	   =
 THINGS =  imagebld.o sha1.o
 
 
@@ -12,7 +10,7 @@ all: clean image
 	${CXX} ${FLAGS} $(EXTRA_CFLAGS) -o $@ -c $<
 
 image: ${THINGS} 
-	gcc $(EXTRA_CFLAGS) -o $@ ${THINGS} 
+	${CXX} $(EXTRA_CFLAGS) -o $@ ${THINGS} 
 	
 clean:
 	-rm -f *.o  image core

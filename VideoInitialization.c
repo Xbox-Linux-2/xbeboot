@@ -21,6 +21,7 @@
 
 #include "boot.h"
 #include "VideoInitialization.h"
+#include <usb/misc/misc.h>
 
 #define FALSE 0
 #define TRUE 1
@@ -59,41 +60,12 @@ static double fabs(double d) {
 }
 #endif
 
-void wait_ms(u32 ticks) {
-        
-	/*
-	  	32 Bit range = 1200 sec ! => 20 min
-		1. sec = 0x369E99
-		1 ms =  3579,545
-					
-	*/
-	
-	u32 COUNT_start;
-	u32 temp;
-	u32 COUNT_TO;
-	u32 HH;
-	
-	// Maximum Input range
-	if (ticks>(1200*1000)) ticks = 1200*1000;
-	
-	COUNT_TO = (u32) ((float)(ticks*3579.545));
-	COUNT_start = IoInputDword(0x8008);	
-
-	while(1) {
-		// Reads out the System timer
-		HH = IoInputDword(0x8008);		
-		temp = HH-COUNT_start;
-		// We reached the counter
-		if (temp>COUNT_TO) break;
-	};
-}
-
-static BYTE NvGetCrtc(BYTE * pbRegs, int nIndex) {
+static BYTE NvGetCrtc(volatile BYTE * pbRegs, int nIndex) {
 	pbRegs[0x6013d4]=nIndex;
 	return pbRegs[0x6013d5];
 }
 
-static void NvSetCrtc(BYTE * pbRegs, int nIndex, BYTE b) {
+static void NvSetCrtc(volatile BYTE * pbRegs, int nIndex, BYTE b) {
 	pbRegs[0x6013d4]=nIndex;
 	pbRegs[0x6013d5]=b;
 }
@@ -427,19 +399,19 @@ static void SetGPURegister(const GPU_PARAMETER* gpu, BYTE *pbRegs) {
 	DWORD m = 0;
 
 	// NVHDISPEND
-	*((DWORD *)&pbRegs[0x680820]) = gpu->crtchdispend - 1;
+	*((volatile DWORD *)&pbRegs[0x680820]) = gpu->crtchdispend - 1;
 	// NVHTOTAL
-	*((DWORD *)&pbRegs[0x680824]) = gpu->nvhtotal;
+	*((volatile DWORD *)&pbRegs[0x680824]) = gpu->nvhtotal;
 	// NVHCRTC
-	*((DWORD *)&pbRegs[0x680828]) = gpu->xres - 1;
+	*((volatile DWORD *)&pbRegs[0x680828]) = gpu->xres - 1;
 	// NVHVALIDSTART
-	*((DWORD *)&pbRegs[0x680834]) = 0;
+	*((volatile DWORD *)&pbRegs[0x680834]) = 0;
 	// NVHSYNCSTART
-	*((DWORD *)&pbRegs[0x68082c]) = gpu->nvhstart;
+	*((volatile DWORD *)&pbRegs[0x68082c]) = gpu->nvhstart;
 	// NVHSYNCEND = NVHSYNCSTART + 32
-	*((DWORD *)&pbRegs[0x680830]) = gpu->nvhstart+32;
+	*((volatile DWORD *)&pbRegs[0x680830]) = gpu->nvhstart+32;
 	// NVHVALIDEND
-	*((DWORD *)&pbRegs[0x680838]) = gpu->xres - 1;
+	*((volatile DWORD *)&pbRegs[0x680838]) = gpu->xres - 1;
 	// CRTC_HSYNCSTART = h_total - 32 (heuristic)
 	m = gpu->nvhtotal - 32;
 	NvSetCrtc(pbRegs, 4, m/8);
@@ -462,19 +434,19 @@ static void SetGPURegister(const GPU_PARAMETER* gpu, BYTE *pbRegs) {
 	NvSetCrtc(pbRegs, 0x19, (NvGetCrtc(pbRegs, 0x19)&0x1f) | ((m >> 3) & 0xe0));
 	NvSetCrtc(pbRegs, 0x13, (m & 0xff));
 	// NVVDISPEND
-	*((DWORD *)&pbRegs[0x680800]) = gpu->yres - 1;
+	*((volatile DWORD *)&pbRegs[0x680800]) = gpu->yres - 1;
 	// NVVTOTAL
-	*((DWORD *)&pbRegs[0x680804]) = gpu->nvvtotal;
+	*((volatile DWORD *)&pbRegs[0x680804]) = gpu->nvvtotal;
 	// NVVCRTC
-	*((DWORD *)&pbRegs[0x680808]) = gpu->yres - 1;
+	*((volatile DWORD *)&pbRegs[0x680808]) = gpu->yres - 1;
 	// NVVVALIDSTART
-	*((DWORD *)&pbRegs[0x680814]) = 0;
+	*((volatile DWORD *)&pbRegs[0x680814]) = 0;
 	// NVVSYNCSTART
-	*((DWORD *)&pbRegs[0x68080c])=gpu->nvvstart;
+	*((volatile DWORD *)&pbRegs[0x68080c])=gpu->nvvstart;
 	// NVVSYNCEND = NVVSYNCSTART + 3
-	*((DWORD *)&pbRegs[0x680810])=(gpu->nvvstart+3);
+	*((volatile DWORD *)&pbRegs[0x680810])=(gpu->nvvstart+3);
 	// NVVVALIDEND
-	*((DWORD *)&pbRegs[0x680818]) = gpu->yres - 1;
+	*((volatile DWORD *)&pbRegs[0x680818]) = gpu->yres - 1;
 	// CRTC_VSYNCSTART
 	b = NvGetCrtc(pbRegs, 7) & 0x7b;
 	NvSetCrtc(pbRegs, 7, b | ((gpu->crtcvstart >> 2) & 0x80) | ((gpu->crtcvstart >> 6) & 0x04));

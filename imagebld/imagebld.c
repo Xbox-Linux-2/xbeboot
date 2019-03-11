@@ -7,7 +7,6 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-// #include <linux/hdreg.h>
 #include <string.h>
 
 #include <stdarg.h>
@@ -16,11 +15,9 @@
 #include "xbe-header.h"
 #include "../config.h"
 
-
 #define debug
 
 #define ValueDumps	0x1000
-
 
 struct Checksumstruct {
 	unsigned char Checksum[20];	
@@ -80,24 +77,24 @@ int xbebuild (	unsigned char * xbeimage,
     printf("XBEBOOT Modus\n\n");
 
 #ifdef LOADXBE	
-	f = fopen(vmlinuzname, "rb");
+	f = fopen((const char *)vmlinuzname, "rb");
 	if (f!=NULL) 
     	{    
  		fseek(f, 0, SEEK_END); 
          	vmlinux_size	 = ftell(f);        
          	fseek(f, 0, SEEK_SET);
     		vmlinuz = malloc(vmlinux_size);
-    		memset(vmlinuz,0xff,sizeof(vmlinuz));
+    		memset(vmlinuz,0xff,vmlinux_size);
     		fread(vmlinuz, 1, vmlinux_size, f);
     		fclose(f);
-    		printf("VMLinuz found, linking it in\n");
+    		printf("vmlinuz found, linking it in\n");
     	} else  {
-    		printf("VMLinuz not found ----> ERROR \n");
+    		printf("vmlinuz not found ----> ERROR \n");
     		return 1;
     		}
 #endif
 #ifdef LOADHDD_CFGFALLBACK
-	f = fopen(configname, "rb");
+	f = fopen((const char *)configname, "rb");
 	if (f!=NULL) 
     	{    
  		fseek(f, 0, SEEK_END); 
@@ -106,14 +103,14 @@ int xbebuild (	unsigned char * xbeimage,
     		config = malloc(config_size);
     		fread(config, 1, config_size, f);
     		fclose(f);
-		printf("Linuxboot.cfg Existing, Linking it in\n");
+		printf("linuxboot.cfg found, linking it in\n");
     	} else  {
-    		printf("Linuxboot.cfg not Existing ---> ERROR \n");
+    		printf("linuxboot.cfg not found ---> ERROR \n");
     		return 1;
     		}
 #endif
 #ifdef LOADXBE
-	f = fopen(initrdname, "rb");
+	f = fopen((const char *)initrdname, "rb");
 	if (f!=NULL) 
     	{    
  		fseek(f, 0, SEEK_END); 
@@ -121,13 +118,13 @@ int xbebuild (	unsigned char * xbeimage,
          	fseek(f, 0, SEEK_SET);
     		initrd = malloc(initrd_size);
     		fread(initrd, 1, initrd_size, f);
-   		printf("Initrd Existing, Linking it in\n");
+   		printf("initrd found, linking it in\n");
     	} else  {
-    		printf("Initrd not Existing   ---> ERROR \n");
+    		printf("initrd not found ---> ERROR \n");
     		return 1;
     		}
 #endif    	
-	f = fopen(xbeimage, "rb");
+	f = fopen((const char *)xbeimage, "rb");
     	if (f!=NULL) 
     	{   
   		fseek(f, 0, SEEK_END); 
@@ -181,11 +178,11 @@ int xbebuild (	unsigned char * xbeimage,
 		
 		xbesize = xbesize + initrd_size;	
 		FileSize += initrd_size;
-                xbesize = (xbesize & 0xffffff00) + 0x100;
+        xbesize = (xbesize & 0xffffff00) + 0x100;
 #endif                
 
 #ifdef LOADHDD_CFGFALLBACK
-               	config_start = xbesize;
+        config_start = xbesize;
 		memcpy(&xbe[ValueDumps + 0x94],&config_start,4);
 		memcpy(&xbe[ValueDumps + 0x98],&config_size,4);               	
 		
@@ -210,42 +207,43 @@ int xbebuild (	unsigned char * xbeimage,
 	 	#endif
 		printf("----------------\n");
 		#endif	      
-	      
-	      
-	      	  
-	        header = (XBE_HEADER*) xbe;
-	        
+
+		header = (XBE_HEADER*) xbe;
+	    
 		// We calculate a new Size of the overall XBE, we allign too		
 		
 		xbeloader_size = xbesize - 0x1000;
 		
 		xbesize = (xbesize & 0xffffff00) + 0x100;
 		
-	        header->ImageSize = FileSize; 
+	    header->ImageSize = FileSize; 
 		
 		//printf("%08x",sechdr->FileSize);                    
 		
 	        
 	  	#ifdef debug
 	 	printf("Size of all headers:     : 0x%08X\n", (unsigned int)header->HeaderSize);
-         	printf("Size of entire image     : 0x%08X\n", (unsigned int)header->ImageSize);
+        printf("Size of entire image     : 0x%08X\n", (unsigned int)header->ImageSize);
 		#endif
 
 		// This selects the first section, we only have one
 		sechdr = (XBE_SECTION *)(((char *)xbe) + (int)header->Sections - (int)header->BaseAddress);
+		#ifdef debug
+		printf("Location of section header: %p\n", (void *)&sechdr);
+		#endif
 
 		sechdr->FileSize = xbeloader_size;
 		sechdr->VirtualSize = xbeloader_size;
 			        
-        	shax(&sha_Message_Digest[0], ((unsigned char *)xbe)+(int)sechdr->FileAddress ,sechdr->FileSize);
+        shax(&sha_Message_Digest[0], ((unsigned char *)xbe)+(int)sechdr->FileAddress ,sechdr->FileSize);
 	  	memcpy(&sechdr->ShaHash[0],&sha_Message_Digest[0],20);
 	  	
 	  	#ifdef debug
 		
 		printf("S0: Virtual address      : 0x%08X\n", (unsigned int)sechdr->VirtualAddress);
-         	printf("S0: Virtual size         : 0x%08X\n", (unsigned int)sechdr->VirtualSize);
-         	printf("S0: File address         : 0x%08X\n", (unsigned int)sechdr->FileAddress);
-         	printf("S0: File size            : 0x%08X\n", (unsigned int)sechdr->FileSize);
+        printf("S0: Virtual size         : 0x%08X\n", (unsigned int)sechdr->VirtualSize);
+        printf("S0: File address         : 0x%08X\n", (unsigned int)sechdr->FileAddress);
+        printf("S0: File size            : 0x%08X\n", (unsigned int)sechdr->FileSize);
 
 		printf("Section 0 Hash XBE       : ");
 		for(a=0; a<SHA1HashSize; a++) {
@@ -259,7 +257,7 @@ int xbebuild (	unsigned char * xbeimage,
 
 	      	
 		// Write back the Image to Disk
-		f = fopen(xbeimage, "wb");
+		f = fopen((const char *)xbeimage, "wb");
     		if (f!=NULL) 
     		{   
 		 fwrite(xbe, 1, xbesize, f);
@@ -310,7 +308,7 @@ int xbeextract (	unsigned char * xbeimage )
 
 
 
-	f = fopen(xbeimage, "rb");
+	f = fopen((const char *)xbeimage, "rb");
     	if (f!=NULL) 
     	{   
   		fseek(f, 0, SEEK_END); 

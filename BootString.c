@@ -1,3 +1,5 @@
+#include "BootString.h"
+
 int HelpStrlen(char *ptr) {
 	int count;
 
@@ -72,11 +74,15 @@ int HelpStrncmp(const char *sz1, const char *sz2, int nMax) {
         return 0; // used up nMax
 }
 
-char * strcpy(char *sz, const char *szc)
+char *strrchr0(char *string, char ch) 
 {
-        char *szStart=sz;
-        while(*szc) *sz++=*szc++;
-        *sz='\0';
-        return szStart;
+        char *ptr = string;
+	while(*ptr != 0) {
+		if(*ptr == ch) {
+			return ptr;
+		} else {
+			ptr++;
+		}
+	}
+	return 0;
 }
-

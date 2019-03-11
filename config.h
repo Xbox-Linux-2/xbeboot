@@ -1,4 +1,5 @@
 ////////////////////// compile-time options ////////////////////////////////
+#define HDLOAD
 
 #ifdef HDLOAD
 	#define LOADHDD

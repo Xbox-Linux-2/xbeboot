@@ -88,7 +88,7 @@ static const double dPllBasePeriod = (1.0/13500000.0);
 EVIDEOSTD DetectVideoStd(void);
 EAVTYPE DetectAvType(void);
 
-int FindOverscanValues(
+bool FindOverscanValues(
 	long h_active,
 	long v_activei,
 	double hoc,

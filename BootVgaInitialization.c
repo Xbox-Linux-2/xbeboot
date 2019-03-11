@@ -23,6 +23,8 @@
 #include "VideoInitialization.h"
 #include "BootVgaInitialization.h"
 #include "I2C.h"
+#include <stdint.h>
+#include <xboxrt/debug.h>
 
 unsigned int VideoEncoder;
 BYTE VIDEO_AV_MODE;
@@ -134,6 +136,44 @@ DWORD nvMainRegs[] =
 		0x680684, 0x680688, 0x68068C, 0x680690,
 };
 
+/*int VideoDumpAddressAndData(uint32_t dwAds, const uint8_t * baData, uint32_t dwCountBytesUsable) { // returns bytes used
+	int nCountUsed=0;
+	while(dwCountBytesUsable) {
+
+		uint32_t dw=(dwAds & 0xfffffff0);
+		char szAscii[17];
+		char sz[256];
+		int n=debugPrint(sz, "%08X: ", dw);
+		int nBytes=0;
+
+		szAscii[16]='\0';
+		while(nBytes<16) {
+			if((dw<dwAds) || (dwCountBytesUsable==0)) {
+				n+=debugPrint(&sz[n], "   ");
+				szAscii[nBytes]=' ';
+			} else {
+				uint8_t b=*baData++;
+				n+=debugPrint(&sz[n], "%02X ", b);
+				if((b<32) || (b>126)) szAscii[nBytes]='.'; else szAscii[nBytes]=b;
+				nCountUsed++;
+				dwCountBytesUsable--;
+			}
+			nBytes++;
+			if(nBytes==8) n+=debugPrint(&sz[n], ": ");
+			dw++;
+		}
+		n+=debugPrint(&sz[n], "   ");
+		n+=debugPrint(&sz[n], "%s", szAscii);
+		sz[n++]='\n';
+		sz[n++]='\0';
+
+		debugPrint(sz, n);
+
+		dwAds=dw;
+	}
+	return 1;
+}*/
+
 void DetectVideoEncoder(void)
 {
 	if (I2CTransmitByteGetReturn(0x6a,0x00) == ERR_I2C_ERROR_BUS) VideoEncoder = ENCODER_CONEXANT;
@@ -151,13 +191,13 @@ void BootVgaInitializationKernelNG(CURRENT_VIDEO_MODE_DETAILS * pcurrentvideomod
 	videoStd = DetectVideoStd();
 	DetectVideoEncoder();
 	
-        // Dump to global variable
+    // Dump to global variable
 	VIDEO_AV_MODE=I2CTransmitByteGetReturn(0x10, 0x04);
 
 	pcurrentvideomodedetails->m_nVideoModeIndex=VIDEO_MODE_640x480;
 
-        // If the client hasn't set the frame buffer start address, assume
-        // it should be at 4M from the end of RAM.
+    // If the client hasn't set the frame buffer start address, assume
+    // it should be at 4M from the end of RAM.
 
 	pcurrentvideomodedetails->m_bAvPack=I2CTransmitByteGetReturn(0x10, 0x04);
 	pcurrentvideomodedetails->m_pbBaseAddressVideo=(BYTE *)0xfd000000;
@@ -333,7 +373,6 @@ void BootVgaInitializationKernelNG(CURRENT_VIDEO_MODE_DETAILS * pcurrentvideomod
 		}		
 	}
 	
-	
 	IoOutputByte(0x80d3, 4);  // ACPI IO video enable REQUIRED <-- particularly crucial to get composite out
 
 	pcurrentvideomodedetails->m_bFinalConexantA8 = 0x81;
@@ -342,10 +381,10 @@ void BootVgaInitializationKernelNG(CURRENT_VIDEO_MODE_DETAILS * pcurrentvideomod
 
 	NVWriteSeq(&riva, 0x01, 0x01);  /* reenable display */
 
-        // We reenable the Video
-        I2CTransmitWord(0x45, 0xa800 | pcurrentvideomodedetails->m_bFinalConexantA8);
-        I2CTransmitWord(0x45, 0xaa00 | pcurrentvideomodedetails->m_bFinalConexantAA);
-        I2CTransmitWord(0x45, 0xac00 | pcurrentvideomodedetails->m_bFinalConexantAC);
+    // We reenable the Video
+    I2CTransmitWord(0x45, 0xa800 | pcurrentvideomodedetails->m_bFinalConexantA8);
+    I2CTransmitWord(0x45, 0xaa00 | pcurrentvideomodedetails->m_bFinalConexantAA);
+    I2CTransmitWord(0x45, 0xac00 | pcurrentvideomodedetails->m_bFinalConexantAC);
 
 }
 

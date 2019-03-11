@@ -1,6 +1,6 @@
 #include "xbox.h"
 
-.globl EscapeCode
+.globl _EscapeCode
 .globl newloc, ptr_newloc
 
 .code32
@@ -11,7 +11,7 @@
 /* This code escapes from the Xbox kernel environment, so that we
    are in plain 32 bit flat protected mode */
 
-EscapeCode:
+_EscapeCode:
 
 /*
  edi = NewFramebuffer
