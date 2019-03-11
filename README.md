@@ -11,9 +11,13 @@ xbeboot has full graphics support and can boot into the Linux kernel, however it
 TODO
 ----
 Fix command line argument passing
+
 Fix imagebld
+
 Allow booting from more storage mediums
+
 Make it prettier
+
 Support GRUB modules so MINIX3 can be booted
 
 Getting Started
