@@ -2544,7 +2544,7 @@ void pb_fill(int x, int y, int w, int h, DWORD color)
     y1=y;
     x2=x+w;
     y2=y+h;
-    
+
     //if you supply 32 bits color and res is 16 bits, apply function below
     //color=((color>>8)&0xF800)|((color>>5)&0x07E0)|((color>>3)&0x001F);
 

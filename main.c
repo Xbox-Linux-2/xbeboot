@@ -163,8 +163,15 @@ void main(void) {
             return;
 	}
 	pb_show_debug_screen();
+	debugClearScreen();
+	debugPrint("Xbox Linux 2 XBEBOOT\n\n");
 
-	debugPrint("Xbox Linux 2 XBEBOOT\n");
+	debugPrint("      _          _                 _   \n");
+	debugPrint("     | |        | |               | |  \n");
+	debugPrint("__  _| |__   ___| |__   ___   ___ | |_ \n");
+	debugPrint("\\ \\/ / '_ \\ / _ \\ '_ \\ / _ \\ / _ \\| __|\n");
+	debugPrint(" >  <| |_) |  __/ |_) | (_) | (_) | |_ \n");
+	debugPrint("/_/\\_\\_.__/ \\___|_.__/ \\___/ \\___/ \\__|\n\n");
 
 	debugPrint("%s - https://github.com/Xbox-Linux-2/xbeboot\n",__DATE__);
 	debugPrint("(C)2002,2018-2019 Xbox Linux Team, Xbox Linux 2 Team\nLicensed under the GPLv2\n\n");

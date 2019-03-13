@@ -149,12 +149,12 @@ void debugPrint(const char *format, ...)
 	int bgColour;
 	switch (SCREEN_BPP) {
 	case 32:
-		fgColour = WHITE;
-		bgColour = BLACK;
+		fgColour = XELL_FG;
+		bgColour = XELL_BG;
 		break;
 	case 16:
-		fgColour = WHITE_16BPP;
-		bgColour = BLACK_16BPP;
+		fgColour = XELL_FG_16BPP;
+		bgColour = XELL_BG_16BPP;
 	}
 
 	unsigned char *s = (unsigned char*)	buffer;
@@ -203,9 +203,22 @@ void advanceScreen( void )
 
 void debugClearScreen( void )
 {
-	unsigned char* videoBuffer = XVideoGetFB();
-
-	memset( videoBuffer, 0, (SCREEN_BPP >> 3) * (SCREEN_WIDTH * SCREEN_HEIGHT) );
+	unsigned char *videoBuffer = XVideoGetFB();
+	for (int y = 0; y < SCREEN_HEIGHT; y++) {
+		for (int x = 0; x < SCREEN_WIDTH; x++) {
+			switch (SCREEN_BPP)
+			{
+				case 32:
+					*((int*)videoBuffer) = XELL_BG;
+					videoBuffer += sizeof(int);
+					break;
+				case 16:
+					*((short*)videoBuffer) = XELL_BG & 0xFFFF;
+					videoBuffer += sizeof(short);
+					break;
+			}
+		}
+	}
 	nextRow = MARGIN;
 	nextCol = MARGIN; 
 }
