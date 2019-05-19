@@ -57,6 +57,9 @@ CFLAGS += $(DEBUG_CFLAGS)
 include $(TOPDIR)/lib/Makefile
 OBJS = $(addsuffix .obj, $(basename $(SRCS)))
 
+OPTRECORDS = $(addsuffix .opt.yaml, $(basename $(SRCS)))
+LIBS = $(addsuffix .lib, $(basename $(SRCS)))
+
 ifneq ($(NXDK_SDL),)
 include $(TOPDIR)/lib/sdl/Makefile
 endif
@@ -79,6 +82,8 @@ all: $(TARGET)
 $(OUTPUT_DIR)/default.xbe: main.exe $(OUTPUT_DIR) $(CXBE)
 	@echo "[ CXBE ] $@"
 	$(VE)$(CXBE) -OUT:$@ -TITLE:$(XBE_TITLE) $< $(QUIET)
+	OPTRECORDS = $(addsuffix .opt.yaml, $(basename $(SRCS)))
+	LIBS = $(addsuffix .lib, $(basename $(SRCS)))
 	#@echo "[ ImageBLD ] $@"
 	#$(TOPDIR)/imagebld/image -build $(TOPDIR)/bin/default.xbe  $(TOPDIR)/vmlinuz $(TOPDIR)/initramfs.cpio.gz  $(TOPDIR)/linuxboot.cfg
 	@ls -l $@
@@ -87,7 +92,7 @@ $(OUTPUT_DIR):
 	@mkdir -p $(OUTPUT_DIR);
 
 main.exe: $(OBJS) $(TOPDIR)/lib/xboxkrnl/libxboxkrnl.lib
-	@$(CC) $(TOPDIR)/imagebld/imagebld.c $(TOPDIR)/imagebld/sha1.c -o $(TOPDIR)/imagebld/image
+	#@$(CC) $(TOPDIR)/imagebld/imagebld.c $(TOPDIR)/imagebld/sha1.c -o $(TOPDIR)/imagebld/image
 	@echo "[ LD ] $@"
 	$(VE) $(LD) $(LDFLAGS) -subsystem:windows -dll -out:'$@' -entry:XboxCRT $^
 
@@ -137,7 +142,9 @@ clean:
 	$(VE)rm -f $(TARGET) \
 	           main.exe main.exe.manifest \
 	           $(OBJS) $(SHADER_OBJS) \
-	           $(GEN_XISO)
+	           $(GEN_XISO) ${DEPS} ${OPTRECORDS} \
+                   ${LIBS} 
+	${VE}rm -r ${OUTPUT_DIR}
 
 .PHONY: distclean 
 distclean: clean
