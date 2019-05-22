@@ -82,8 +82,6 @@ all: $(TARGET)
 $(OUTPUT_DIR)/default.xbe: main.exe $(OUTPUT_DIR) $(CXBE)
 	@echo "[ CXBE ] $@"
 	$(VE)$(CXBE) -OUT:$@ -TITLE:$(XBE_TITLE) $< $(QUIET)
-	OPTRECORDS = $(addsuffix .opt.yaml, $(basename $(SRCS)))
-	LIBS = $(addsuffix .lib, $(basename $(SRCS)))
 	#@echo "[ ImageBLD ] $@"
 	#$(TOPDIR)/imagebld/image -build $(TOPDIR)/bin/default.xbe  $(TOPDIR)/vmlinuz $(TOPDIR)/initramfs.cpio.gz  $(TOPDIR)/linuxboot.cfg
 	@ls -l $@
